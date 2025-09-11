@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -77,7 +76,7 @@ fun CharacterDetail(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = modifier.requiredWidth(dimensionResource(R.dimen.large_image_size))
+        modifier = modifier.padding(dimensionResource(R.dimen.medium))
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context = LocalContext.current)
@@ -91,17 +90,20 @@ fun CharacterDetail(
                 .size(dimensionResource(R.dimen.large_image_size))
                 .clip(CircleShape)
         )
-        Spacer(Modifier.height(dimensionResource(R.dimen.small)))
+        Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
         Text(
             text = character.name,
             style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.width(dimensionResource(R.dimen.large_image_size))
         )
-        Spacer(Modifier.height(dimensionResource(R.dimen.small)))
+        Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
         CharacterStatusInfo(character.status)
         Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
-        CharacterInfo(label = "Species", value = character.species)
-        CharacterInfo(label = "Gender", value = character.gender.value)
+        Column(Modifier.width(dimensionResource(R.dimen.large_image_size))) {
+            CharacterInfo(label = "Species", value = character.species)
+            CharacterInfo(label = "Gender", value = character.gender.value)
+        }
     }
 }
 
