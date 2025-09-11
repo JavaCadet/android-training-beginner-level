@@ -6,5 +6,5 @@
     <dimen name="large">24dp</dimen>
     <dimen name="extra_large">32dp</dimen>
     <dimen name="large_image_size">300dp</dimen>
-    <dimen name="small_image_size">64dp</dimen>
+    <dimen name="small_image_size">128dp</dimen>
 </resources>

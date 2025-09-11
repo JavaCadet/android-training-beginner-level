@@ -1,12 +1,11 @@
 package com.example.rickandmorty.ui.characters
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -104,7 +103,8 @@ fun CharactersList(
     LazyColumn(
         state = lazyListState,
         verticalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.small)),
-        modifier = modifier.padding(dimensionResource(R.dimen.small))
+        contentPadding = PaddingValues(dimensionResource(R.dimen.small)),
+        modifier = modifier
     ) {
         items(characters, { characters -> characters.id }) { character ->
             CharacterCard(
@@ -142,12 +142,14 @@ fun CharacterCard(
                 contentDescription = null,
                 modifier = Modifier.size(dimensionResource(R.dimen.small_image_size))
             )
-            Spacer(modifier.width(dimensionResource(R.dimen.medium)))
             Text(
                 text = character.name,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.medium))
             )
         }
     }
