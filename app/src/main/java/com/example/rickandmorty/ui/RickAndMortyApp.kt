@@ -1,5 +1,6 @@
 package com.example.rickandmorty.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -52,6 +53,7 @@ fun RickAndMortyApp() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.surfaceDim)
         )
     }
 }
@@ -62,6 +64,7 @@ fun AppTopBar(
     title: String,
     showUpButton: Boolean,
     onUpClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     TopAppBar(
         title = {
@@ -84,10 +87,11 @@ fun AppTopBar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.primary,
-            navigationIconContentColor = MaterialTheme.colorScheme.primary
-        )
+            containerColor = MaterialTheme.colorScheme.inverseSurface,
+            titleContentColor = MaterialTheme.colorScheme.inverseOnSurface,
+            navigationIconContentColor = MaterialTheme.colorScheme.inverseOnSurface
+        ),
+        modifier = modifier
     )
 }
 
