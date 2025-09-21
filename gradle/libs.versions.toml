@@ -15,6 +15,9 @@ coroutines = "1.10.2"
 # Compose navigation
 navigationCompose = "2.9.4"
 
+# Compose animation
+animationCompose = "1.9.1"
+
 # Retrofit
 okhttp3 = "5.1.0"
 retrofit = "3.0.0"
@@ -48,6 +51,9 @@ kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-c
 
 # Compose navigation
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref="navigationCompose"}
+
+# Compose animation
+androidx-animation-compose = { group = "androidx.compose.animation", name = "animation", version.ref="animationCompose" }
 
 # ViewModel for Compose
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose" }

@@ -1,5 +1,9 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.example.rickandmorty.ui
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -102,25 +106,31 @@ fun AppNavHost(
     updateTitle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
-    ) {
-        composable<AppRoutes.ListOfCharacters> {
-            CharactersListScreen(
-                updateTitle = updateTitle,
-                onCharacterClick = { characterId ->
-                    navController.navigate(AppRoutes.CharacterDetail(characterId))
-                }
-            )
-        }
-        composable<AppRoutes.CharacterDetail> { backStackEntry ->
-            val args = backStackEntry.toRoute< AppRoutes.CharacterDetail>()
-            CharacterDetailScreen(
-                characterId = args.characterId,
-                updateTitle = updateTitle
-            )
+    SharedTransitionLayout {
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = modifier
+        ) {
+            composable<AppRoutes.ListOfCharacters> {
+                CharactersListScreen(
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this@composable,
+                    updateTitle = updateTitle,
+                    onCharacterClick = { characterId ->
+                        navController.navigate(AppRoutes.CharacterDetail(characterId))
+                    }
+                )
+            }
+            composable<AppRoutes.CharacterDetail> { backStackEntry ->
+                val args = backStackEntry.toRoute<AppRoutes.CharacterDetail>()
+                CharacterDetailScreen(
+                    characterId = args.characterId,
+                    sharedTransitionScope = this@SharedTransitionLayout,
+                    animatedContentScope = this@composable,
+                    updateTitle = updateTitle
+                )
+            }
         }
     }
 }

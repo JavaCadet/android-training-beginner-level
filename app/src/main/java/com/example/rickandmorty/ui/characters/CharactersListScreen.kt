@@ -1,6 +1,13 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.example.rickandmorty.ui.characters
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -50,13 +57,14 @@ import com.example.rickandmorty.data.model.Character
 import com.example.rickandmorty.ui.common.FailureScreen
 import com.example.rickandmorty.ui.common.LoadingScreen
 import com.example.rickandmorty.utils.UiState
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun CharactersListScreen(
     viewModel: CharactersListViewModel = hiltViewModel(),
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     updateTitle: (String) -> Unit,
     onCharacterClick: (Int) -> Unit
 ) {
@@ -74,6 +82,8 @@ fun CharactersListScreen(
         is UiState.Success -> CharactersList(
             characters = result.data,
             lazyListState = lazyListState,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope,
             onLoadMore = { viewModel.getCharacters(true) },
             onCharacterClick = onCharacterClick
         )
@@ -83,10 +93,12 @@ fun CharactersListScreen(
         )
     }
 }
-@OptIn(FlowPreview::class)
+
 @Composable
 fun CharactersList(
     characters: List<Character>,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     lazyListState: LazyListState,
     onLoadMore: () -> Unit,
     onCharacterClick: (Int) -> Unit,
@@ -125,6 +137,8 @@ fun CharactersList(
         ) { character ->
             NeumorphismCharacterCard(
                 character = character,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
                 onCardClick = { onCharacterClick(character.id) },
                 modifier = Modifier
             )
@@ -135,6 +149,8 @@ fun CharactersList(
 @Composable
 fun NeumorphismCharacterCard(
     character: Character,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -188,6 +204,8 @@ fun NeumorphismCharacterCard(
         )
         CharacterCard(
             character = character,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope,
             modifier = Modifier
                 .clickable(
                     interactionSource = interactionSource,
@@ -201,6 +219,8 @@ fun NeumorphismCharacterCard(
 @Composable
 fun CharacterCard(
     character: Character,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     modifier: Modifier = Modifier
 ) {
     val cardShape = RoundedCornerShape(dimensionResource(R.dimen.medium))
@@ -231,26 +251,47 @@ fun CharacterCard(
                     )
                 )
         ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(character.image)
-                    .crossfade(true)
-                    .build(),
-                placeholder = painterResource(R.drawable.loading_img),
-                error = painterResource(R.drawable.broken_image),
-                contentDescription = null,
-                modifier = Modifier.size(dimensionResource(R.dimen.small_image_size))
-            )
-            Text(
-                text = character.name,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(dimensionResource(R.dimen.medium))
-            )
+            with(sharedTransitionScope) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(character.image)
+                        .crossfade(true)
+                        .build(),
+                    placeholder = painterResource(R.drawable.loading_img),
+                    error = painterResource(R.drawable.broken_image),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .sharedElement(
+                            sharedContentState = sharedTransitionScope.rememberSharedContentState(
+                                key = "image-${character.id}"
+                            ),
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = { initial, target ->
+                                tween(durationMillis = 300, easing = FastOutLinearInEasing)
+                            }
+                        )
+                        .size(dimensionResource(R.dimen.small_image_size))
+                )
+                Text(
+                    text = character.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(dimensionResource(R.dimen.medium))
+                        .sharedElement(
+                            sharedContentState = sharedTransitionScope.rememberSharedContentState(
+                                key = "text-${character.id}"
+                            ),
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = { initial, target ->
+                                tween(durationMillis = 300, easing = FastOutLinearInEasing)
+                            }
+                        )
+                )
+            }
         }
     }
 }

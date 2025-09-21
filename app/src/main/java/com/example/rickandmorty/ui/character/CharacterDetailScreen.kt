@@ -1,5 +1,12 @@
+@file:OptIn(ExperimentalSharedTransitionApi::class)
+
 package com.example.rickandmorty.ui.character
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,6 +49,8 @@ import com.example.rickandmorty.utils.UiState
 fun CharacterDetailScreen(
     characterId: Int,
     viewModel: CharacterDetailViewModel = hiltViewModel(),
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     updateTitle: (String) -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -54,6 +63,8 @@ fun CharacterDetailScreen(
         is UiState.Loading -> LoadingScreen()
         is UiState.Success -> CharacterDetail(
             character = result.data,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope,
             updateTitle = updateTitle
         )
         is UiState.Failure -> FailureScreen(
@@ -66,6 +77,8 @@ fun CharacterDetailScreen(
 @Composable
 fun CharacterDetail(
     character: Character,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     updateTitle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -73,36 +86,57 @@ fun CharacterDetail(
         updateTitle(character.name)
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier.padding(dimensionResource(R.dimen.medium))
-    ) {
-        AsyncImage(
-            model = ImageRequest.Builder(context = LocalContext.current)
-                .data(character.image)
-                .crossfade(true)
-                .build(),
-            error = painterResource(R.drawable.broken_image),
-            placeholder = painterResource(R.drawable.loading_img),
-            contentDescription = null,
-            modifier = Modifier
-                .size(dimensionResource(R.dimen.large_image_size))
-                .clip(CircleShape)
-        )
-        Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
-        Text(
-            text = character.name,
-            style = MaterialTheme.typography.headlineLarge,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.width(dimensionResource(R.dimen.large_image_size))
-        )
-        Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
-        CharacterStatusInfo(character.status)
-        Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
-        Column(Modifier.width(dimensionResource(R.dimen.large_image_size))) {
-            CharacterInfo(label = "Species", value = character.species)
-            CharacterInfo(label = "Gender", value = character.gender.value)
+    with(sharedTransitionScope) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = modifier.padding(dimensionResource(R.dimen.medium))
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(context = LocalContext.current)
+                    .data(character.image)
+                    .crossfade(true)
+                    .build(),
+                error = painterResource(R.drawable.broken_image),
+                placeholder = painterResource(R.drawable.loading_img),
+                contentDescription = null,
+                modifier = Modifier
+                    .sharedElement(
+                        sharedContentState = sharedTransitionScope.rememberSharedContentState(
+                            key = "image-${character.id}"
+                        ),
+                        animatedVisibilityScope = animatedContentScope,
+                        boundsTransform = { initial, target ->
+                            tween(durationMillis = 300, easing = LinearOutSlowInEasing)
+                        }
+                    )
+                    .size(dimensionResource(R.dimen.large_image_size))
+                    .clip(CircleShape)
+            )
+            Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
+            Text(
+                text = character.name,
+                style = MaterialTheme.typography.headlineLarge,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .sharedElement(
+                        sharedContentState = sharedTransitionScope.rememberSharedContentState(
+                            key = "text-${character.id}"
+                        ),
+                        animatedVisibilityScope = animatedContentScope,
+                        boundsTransform = { initial, target ->
+                            tween(durationMillis = 300, easing = LinearOutSlowInEasing)
+                        }
+                    )
+                    .width(dimensionResource(R.dimen.large_image_size))
+            )
+            Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
+            CharacterStatusInfo(character.status)
+            Spacer(Modifier.height(dimensionResource(R.dimen.medium)))
+            Column(Modifier.width(dimensionResource(R.dimen.large_image_size))) {
+                CharacterInfo(label = "Species", value = character.species)
+                CharacterInfo(label = "Gender", value = character.gender.value)
+            }
         }
     }
 }
