@@ -1,5 +1,8 @@
 package com.example.rickandmorty.ui.characters
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -9,6 +12,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +21,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,16 +32,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.draw.innerShadow
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -116,10 +119,13 @@ fun CharactersList(
         contentPadding = PaddingValues(dimensionResource(R.dimen.small)),
         modifier = modifier
     ) {
-        items(characters, { characters -> characters.id }) { character ->
-            CharacterCard(
+        items(
+            items = characters,
+            key = { characters -> characters.id }
+        ) { character ->
+            NeumorphismCharacterCard(
                 character = character,
-                onCardClick = onCharacterClick,
+                onCardClick = { onCharacterClick(character.id) },
                 modifier = Modifier
             )
         }
@@ -127,114 +133,123 @@ fun CharactersList(
 }
 
 @Composable
-fun CharacterCard(
+fun NeumorphismCharacterCard(
     character: Character,
-    onCardClick: (Int) -> Unit,
+    onCardClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val offset by animateDpAsState(
+        targetValue = if (isPressed) 0.dp else dimensionResource(R.dimen.extra_small)
+    )
+    val blur by animateDpAsState(
+        targetValue = if (isPressed) 0.dp else dimensionResource(R.dimen.extra_small)
+    )
 
     Box(
         modifier = modifier.padding(dimensionResource(R.dimen.small))
     ) {
-        // Simulate elevated state with drop shadows
-        if (!isPressed) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.small_image_size))
-                    .dropShadow( // Top highlight
-                        shape = RoundedCornerShape(dimensionResource(R.dimen.medium)),
-                        shadow = Shadow(
-                            color = Color.White.copy(alpha = 0.8f),
-                            radius = dimensionResource(R.dimen.small),
-                            offset = DpOffset(
-                                x = -dimensionResource(R.dimen.extra_small),
-                                y = -dimensionResource(R.dimen.extra_small)
-                            )
-                        )
-                    )
-                    .dropShadow( // Bottom shadow
-                        shape = RoundedCornerShape(dimensionResource(R.dimen.medium)),
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = 0.2f),
-                            radius = dimensionResource(R.dimen.small),
-                            offset = DpOffset(
-                                x = dimensionResource(R.dimen.extra_small),
-                                y = dimensionResource(R.dimen.extra_small)
-                            )
-                        )
-                    )
-            )
-        }
-
-        Card(
-            shape = RoundedCornerShape(dimensionResource(R.dimen.medium)),
-            elevation = CardDefaults.cardElevation(),
-            modifier = modifier
+        // Light shadow
+        Box(
+            modifier = Modifier
                 .fillMaxWidth()
+                .height(dimensionResource(R.dimen.small_image_size))
+                .offset(
+                    x = 0.dp,
+                    y = -offset
+                )
+                .blur(
+                    radius = blur,
+                    edgeTreatment = BlurredEdgeTreatment.Unbounded
+                )
+                .background(
+                    color = Color.White.copy(alpha = .6f),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.medium))
+                )
+        )
+        // Dark shadow
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.small_image_size))
+                .offset(
+                    x = 0.dp,
+                    y = offset
+                )
+                .blur(
+                    radius = blur,
+                    edgeTreatment = BlurredEdgeTreatment.Unbounded
+                )
+                .background(
+                    color = Color.Black.copy(alpha = .2f),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.medium))
+                )
+        )
+        CharacterCard(
+            character = character,
+            modifier = Modifier
                 .clickable(
                     interactionSource = interactionSource,
                     indication = null, // Disable ripple effect
-                    onClick = { onCardClick(character.id) }
+                    onClick = onCardClick
+                )
+        )
+    }
+}
+
+@Composable
+fun CharacterCard(
+    character: Character,
+    modifier: Modifier = Modifier
+) {
+    val cardShape = RoundedCornerShape(dimensionResource(R.dimen.medium))
+
+    Card(
+        shape = cardShape,
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .background(
+                    shape = cardShape,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.surfaceDim,
+                            Color.Black.copy(alpha = .1f)
+                        )
+                    ))
+                .border(
+                    width = 1.dp,
+                    shape = cardShape,
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = .6f),
+                            Color.Black.copy(alpha = .2f)
+                        )
+                    )
                 )
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-            ) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(character.image)
-                        .crossfade(true)
-                        .build(),
-                    placeholder = painterResource(R.drawable.loading_img),
-                    error = painterResource(R.drawable.broken_image),
-                    contentDescription = null,
-                    modifier = Modifier.size(dimensionResource(R.dimen.small_image_size))
-                )
-                Text(
-                    text = character.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(dimensionResource(R.dimen.medium))
-                )
-            }
-        }
-
-        // Simulate clicked state with inner shadows
-        if (isPressed) {
-            Box(
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(character.image)
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(R.drawable.loading_img),
+                error = painterResource(R.drawable.broken_image),
+                contentDescription = null,
+                modifier = Modifier.size(dimensionResource(R.dimen.small_image_size))
+            )
+            Text(
+                text = character.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(dimensionResource(R.dimen.small_image_size))
-                    .innerShadow( // Top shadow
-                        shape = RoundedCornerShape(dimensionResource(R.dimen.medium)),
-                        shadow = Shadow(
-                            color = Color.Black.copy(alpha = 0.2f),
-                            radius = dimensionResource(R.dimen.small),
-                            offset = DpOffset(
-                                x = dimensionResource(R.dimen.extra_small),
-                                y = dimensionResource(R.dimen.extra_small)
-                            )
-                        )
-                    )
-                    .innerShadow( // Bottom highlight
-                        shape = RoundedCornerShape(dimensionResource(R.dimen.medium)),
-                        shadow = Shadow(
-                            color = Color.White.copy(alpha = 0.6f),
-                            radius = dimensionResource(R.dimen.small),
-                            offset = DpOffset(
-                                x = -dimensionResource(R.dimen.extra_small),
-                                y = -dimensionResource(R.dimen.extra_small)
-                            )
-                        )
-                    )
+                    .padding(dimensionResource(R.dimen.medium))
             )
         }
     }
