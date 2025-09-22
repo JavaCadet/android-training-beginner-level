@@ -103,7 +103,7 @@ class DefaultRickAndMortyRepository(
                 return ApiResult.Failure("No internet connection")
             } catch (e: HttpException) {
                 Log.e(tag, e.message, e)
-                return ApiResult.Failure("Server error: ${e.code()}")
+                return ApiResult.Failure("HTTP error: ${e.code()}")
             } catch (e: Exception) {
                 Log.e(tag, e.message, e)
                 return ApiResult.Failure("Unexpected error occurred")
